@@ -21,7 +21,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module gpio(
+module gpio (
 input clk,
 input resetn,
 //siganls for native memory interface
@@ -32,15 +32,15 @@ input [31:0] iomem_wdata,
 input [3:0] iomem_wstrb,
 output reg [31:0] iomem_rdata,
 //
-output [7:0] gpio_pins
+output [49:0] gpio_pins
     );
     
-    reg [7:0] gpio_reg;
+    reg [49:0] gpio_reg;
     
     always@(posedge clk) begin
     if (!resetn) 
     begin
-    gpio_reg <= 8'b0;
+    gpio_reg <= 50'b0;
     iomem_ready <= 1'b0; // gpio not ready
     iomem_rdata <= 32'h0;
     end
@@ -52,13 +52,20 @@ output [7:0] gpio_pins
     iomem_ready <= 1'b1;
     
     //write
-    if(iomem_wstrb != 4'b0000 && iomem_addr == 32'h1000_0000)
-    gpio_reg <= iomem_wdata[7:0];
+if(iomem_wstrb != 4'b0000 && iomem_addr == 32'h1000_0000)
+    gpio_reg[31:0] <= iomem_wdata;
+
+else if(iomem_wstrb != 4'b0000 && iomem_addr == 32'h1000_0004)
+    gpio_reg[49:32] <= iomem_wdata[17:0];
     
     //read
-    if(iomem_addr == 32'h1000_0000)
-    iomem_rdata <= {24'b0,gpio_reg};
-    else
+if(iomem_addr == 32'h1000_0000)
+    iomem_rdata <= gpio_reg[31:0];
+
+else if(iomem_addr == 32'h1000_0004)
+    iomem_rdata <= {14'b0, gpio_reg[49:32]};
+
+else
     iomem_rdata <= 32'h0;
     end
     end
